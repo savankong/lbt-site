@@ -1,4 +1,3 @@
-import { createServerClient } from '@/lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
@@ -10,7 +9,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
     }
 
-    const db = createServerClient()
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
+    }
+
+    const { createClient } = await import('@supabase/supabase-js')
+    const db = createClient(supabaseUrl, supabaseKey)
     const table = type === 'sponsor' ? 'sponsor_submissions' : 'guest_submissions'
 
     const { error } = await db.from(table).insert(fields)
